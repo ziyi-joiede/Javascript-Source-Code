@@ -2,3 +2,4 @@
 
 - call,apply,bind的实现
 - _new 的实现
+- __proto__的实现
