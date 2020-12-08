@@ -7,3 +7,4 @@
 - _filter的实现(Array.prototype.filter)
 - _instanceof的实现
 - _map的实现(Array.proptotype.map)
+- Promise的实现
