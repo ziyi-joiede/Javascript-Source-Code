@@ -9,3 +9,4 @@
 - _map的实现(Array.proptotype.map)
 - Promise的实现
 - _reduce的实现(Array.prototype.reduce)
+- 继承的几种方式,及各自缺点
