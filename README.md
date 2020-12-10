@@ -10,3 +10,5 @@
 - Promise的实现
 - _reduce的实现(Array.prototype.reduce)
 - 继承的几种方式,及各自缺点
+- Object.create的实现
+- Object.assign的实现
