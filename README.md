@@ -13,3 +13,5 @@
 - Object.create的实现
 - Object.assign的实现
 - Vue的响应式原理
+- 函数防抖debounce
+- 函数节流throttle
