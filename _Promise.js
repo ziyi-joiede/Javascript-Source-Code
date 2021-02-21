@@ -1,153 +1,150 @@
-let Promise = function Promise(executor) {
-    this.value = undefined;
-    this.state = 'pending';
-    this.reason = undefined;
-
-    this.resolveQueue = [];
-    this.rejectQueue = [];
-
-    let _resolve = (value) => {
-        if (this.state !== 'pending') {
-            return;
-        }
-        let run = () => {
-            this.value = value;
-            this.state = 'resolved';
-
-            while (this.resolveQueue.length) {
-                let cb = this.resolveQueue.shift();
-                cb(value);
-            }
-        };
-        setTimeout(run);
-    }
-
-    let _reject = (err) => {
-        if (this.state !== 'pending') {
-            return;
-        }
-        let run = () => {
-            this.reason = err;
-            this.state = 'rejected';
-
-            while (this.resolveQueue.length) {
-                let cb = this.rejectQueue.shift();
-                cb(err);
-            }
-        }
-
-        setTimeout(run);
-    }
-
-    executor(_resolve, _reject);
-}
-
-Promise.prototype.then = function then(onFullfill, onReject) {
-    onFullfill = typeof onFullfill === 'function' ? onFullfill : value => value;
-    onReject = typeof onReject === 'function' ? onReject : (err) => { throw (err) };
-    return new Promise((resolve, reject) => {
-        let _resolve = (value) => {
-            try {
-                let ret = onFullfill(value);
-                ret instanceof Promise ? ret.then(onFullfill, onFullfill) : resolve(ret);
-            } catch (e) {
-                reject(e)
-            }
-        };
-
-        let _reject = (err) => {
-            try {
-                let ret = onReject(err);
-                ret instanceof Promise ? ret.then(onFullfill, onReject) : resolve(ret);
-
-            } catch (e) {
-                reject(e);
-            }
-        };
-
-        switch (this.state) {
-            case 'pending':
-                this.resolveQueue.push(onFullfill);
-                this.rejectQueue.push(onReject);
-                break;
-            case 'resolved':
-                try {
-                    _resolve(this.value);
-                } catch (err) {
-                    reject(err);
+Promise
+    ? ''
+    : (
+        class Promise {
+            constructor(executor) {
+                if (typeof executor !== 'function') {
+                    throw new TypeError('executor must be a funciton');
                 }
-                break;
-            case 'rejected':
-                try {
-                    _reject(this.reason);
-                } catch (err) {
-                    reject(err);
+
+                this.value = undefined;
+                this.state = 'pending';
+                this.reason = undefined;
+
+                this.resolveQueue = [];
+                this.rejectQueue = [];
+
+                let _resolve = (value) => {
+                    let run = () => {
+                        if (this.state !== 'pending') {
+                            return;
+                        }
+                        this.value = value;
+                        this.state = 'resolved';
+                        while (this.resolveQueue.length) {
+                            let cb = this.resolveQueue.shift();
+                            cb();
+                        }
+                    };
+                    setTimeout(run);
+                };
+                let _reject = (err) => {
+                    let run = () => {
+                        if (this.state !== 'pending') {
+                            return;
+                        }
+                        this.reason = err;
+                        this.state = 'rejected';
+                        while (this.rejectQueue.length) {
+                            let cb = this.rejectQueue.shift();
+                            cb();
+                        }
+                    };
+                    setTimeout(run);
                 }
-                break;
-        }
-    });
-};
 
-Promise.prototype.catch = function _catch(onReject) {
-    return this.then(undefined, onReject);
-}
+                executor(_resolve, _reject);
+            }
 
-Promise.prototype.finally = function _finally(fn) {
-    return this.then(
-        value => {
-            Promise.resolve(fn()).then(() => value);
-        },
-        err => {
-            Promise.resolve(fn()).then(() => { throw err });
+            then(onFulfill, onReject) {
+                typeof onFulfill === 'function' ? '' : (onFulfill = value => value);
+                typeof onReject === 'function' ? '' : (onReject = err => { throw err });
+
+                return new Promsie((resolve, reject) => {
+
+                    let _resolve = (value) => {
+                        try {
+                            let ret = onFulfill(value);
+                            ret instanceof Promise ? ret.then(resolve, reject) : resolve(ret);
+                        } catch (ex) {
+                            reject(ex);
+                        }
+                    }
+
+                    let _reject = (err) => {
+                        try {
+                            let ret = onReject(err);
+                            ret instanceof Promise ? ret.then(resolve, reject) : resolve(ret);
+                        } catch (ex) {
+                            reject(ex)
+                        }
+                    }
+
+                    switch (this.state) {
+                        case 'pending':
+                            this.resolveQueue.push(onFulfill);
+                            this.rejectQueue.push(onReject);
+                            break;
+                        case 'resolved':
+                            _resolve(this.value);
+                            break;
+                        case 'rejected':
+                            _reject(this.reason);
+                            break;
+                    }
+                });
+            }
+
+            catch(fn) {
+                return this.then(undefined, fn);
+            }
+
+            finally(fn) {
+                return this.then(
+                    value => {
+                        Promise.resolve(fn()).then(() => value)
+                    },
+                    err => {
+                        Promise.resolve(fn()).then(() => { throw err })
+                    }
+                )
+            }
+
+            static resolve(value) {
+                if (value instanceof Promise) {
+                    return value;
+                }
+                return new Promise((resolve, reject) => {
+                    resolve(value);
+                })
+            }
+            static reject(value) {
+                return new Promise((resolve, reject) => {
+                    reject(value);
+                })
+            }
+            static race(promiseArr) {
+                return new Promsie((resolve, reject) => {
+                    for (let p of promiseArr) {
+                        Promise.resolve(p).then(
+                            value => {
+                                resolve(value);
+                            },
+                            err => {
+                                reject(err);
+                            }
+                        )
+                    }
+                });
+            }
+            static all(promiseArr) {
+                return new Promsie((resolve, reject) => {
+                    let ret = [];
+                    for (let i = 0, l = promiseArr.length; i < l; i++) {
+                        let p = promiseArr[i];
+                        Promsie.resolve(p).then(
+                            value => {
+                                if (ret.length === l) {
+                                    resolve(ret);
+                                }
+                                ret[i] = value;
+                            },
+                            err => {
+                                reject(err)
+                            }
+                        )
+                    }
+                })
+            }
         }
     )
-};
-
-Promise.resolve = function _resolve(value) {
-    if (value instanceof Promise) {
-        return value;
-    }
-    return new Promise((resolve, reject) => {
-        resolve(value);
-    });
-}
-
-Promise.reject = function _reject(err) {
-    return new Promise((resolve, reject) => {
-        reject(err);
-    });
-}
-
-Promise.all = function all(prmoiseArr) {
-    return new Promise((resolve, reject) => {
-        let ret = [];
-        for (let i = 0, len = prmoiseArr.length; i < len; i++) {
-            Promise.resolve(p).then(
-                value => {
-                    ret[i] = value;
-                    if (ret.length === len) {
-                        resolve(ret);
-                    }
-                },
-                err => {
-                    reject(err);
-                }
-            )
-        }
-    })
-}
-
-Promise.race = function race(prmoiseArr) {
-    return new Promise((resolve, reject) => {
-        for (let p of prmoiseArr) {
-            Promise.resolve(p).then(
-                value => {
-                    resolve(value);
-                },
-                err => {
-                    reject(err);
-                }
-            );
-        }
-    });
-}
