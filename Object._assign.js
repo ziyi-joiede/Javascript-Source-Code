@@ -1,27 +1,28 @@
-Object.defineProperty(Object, '_assign', {
-    value(target) {
-        if (target == null) {
-            throw new TypeError('target 不能为null或undefined');
-        }
+Object.assign ? '' : (
+    Object.defineProperty(Object, 'assign', {
+        value(source, ...targets) {
+            if (source == null) {
+                throw new TypeError('Object.assign 的第一个参数不能为 null or undefined');
+            }
 
-        target = Object(target);
+            source = Object(source);
 
-        let args = Array.prototype.slice.call(arguments, 1);
-        if (args != null) {
-            for (let i = 0, len = args.length; i < len; i++) {
-                let item = args[i];
-                if (item != null) {
-                    for (let key in item) {
-                        if (Object.prototype.hasOwnProperty.call(item, key)) {
-                            target[key] = item[key];
+            if (targets != null) {
+                for (let i = 0, l = targets.length; i < l; i++) {
+                    let target = targets[i];
+                    if (target != null) {
+                        for (let key in target) {
+                            if (Object.prototype.hasOwnProperty.call(target, key)) {
+                                source[key] = target[key];
+                            }
                         }
                     }
                 }
             }
-        }
-        return target;
-    },
-    writable: true,
-    configurable: true,
-    enumerable: false
-})
+
+            return source;
+        },
+        configurable: true,
+        writable: true
+    })
+)

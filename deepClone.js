@@ -1,42 +1,35 @@
-let deepClone = function (target, hash = new WeakMap()) {
-
-    function isObject(target) {
-        if (!target && typeof target === 'object') {
-            return true;
-        } else {
-            return false;
-        }
+let deepClone = function (source, hash = new WeakMap()) {
+    const isObject = (target) => {
+        return target !== null && typeof target === 'object';
     }
 
-    if (!isObject(target)) {
-        return target;
+    if (!isObject(source)) {
+        return source;
     }
 
-    let res = Array.isArray(target) ? [] : {};
-    if (hash.get(target)) {
-        return hash.get(target);
+    if (Object.prototype.toString.call(source) === '[object Date]') {
+        return new Date(source);
     }
 
-    hash.set(target, res);
-
-    let symbolArr = Object.prototype.getOwnPropertySymbols.call(target);
-
-    for (let i = 0, l = symbolArr; i < l; i++) {
-        let symbol = symbolArr[i];
-        if (isObject(target[symbol])) {
-            deepClone(target[symbol], hash);
-        } else {
-            res[symbol] = target[symbol];
-        }
+    if (Object.prototype.toString.call(source) === '[object RegExp]') {
+        return new RegExp(source);
     }
 
-    Object.keys(target).forEach(key => {
-        if (isObject(target[key])) {
-            deepClone(target[key], hash);
-        } else {
-            res[ey] = target[key];
-        }
-    });
+    if (hash.has(source)) {
+        return hash.get(source);
+    }
+
+    let allDescriptors = Object.getOwnPropertyDescriptors(source);
+
+    let res = Object.create(Object.getPrototypeOf(source), allDescriptors);
+
+    hash.set(source, res);
+
+    for (let key of Reflect.ownKeys(source)) {
+        res[key] = isObject(source[key])
+            ? deepClone(source[key], hash)
+            : souce[key];
+    }
 
     return res;
 }

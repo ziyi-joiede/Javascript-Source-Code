@@ -1,24 +1,19 @@
-Object.defineProperty(Object, '_create', {
-    configurable: true,
-    enumerable: false,
-    value(prototype, properties) {
-        let Ctor = function () { }
-        Ctor.prototype = prototype;
-        let o = new Ctor();
-        if (prototype) {
-            o.constructor = Ctor;
-        }
+Object.create ? '' : (
+    Object.defineProperty(Object, 'create', {
+        value(prototype, properties) {
+            function Fn() { };
+            Fn.prototype = prototype;
+            let ret = new Fn();
 
-        if (properties !== undefined) {
-            if (Object(properties) === undefined) {
-                throw new TypeError('');
+            if (properties != null) {
+                if (Object(properties) !== undefined) {
+                    Object.defineProperties(properties);
+                }
             }
 
-            Object.defineProperties(o, properties);
-        }
-
-        return o;
-
-    },
-    writable: true
-})
+            return ret;
+        },
+        writable: true,
+        configurable: true
+    })
+)
